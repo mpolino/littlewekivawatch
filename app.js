@@ -154,33 +154,31 @@ function refreshCurrent() {
 // ---- Chart ----
 var chart = null;
 var currentPeriod = 'P7D';
+var firstChartLoad = true;
 
-function drawChart(pts) {
-  var labels = [], data = [];
-  for (var i = 0; i < pts.length; i++) {
-    labels.push(new Date(pts[i].t));
-    data.push(Number(gageToDepth(pts[i].gage).toFixed(2)));
+// Register the annotation plugin (UMD global) ONCE at top level, after libs load.
+// Guard both possible UMD global names; skip gracefully if neither is present.
+(function registerAnnotationPlugin() {
+  if (typeof Chart === 'undefined') return;
+  var ann = window.ChartAnnotation || window['chartjs-plugin-annotation'];
+  if (ann) {
+    try { Chart.register(ann); } catch (e) { /* already registered or bad plugin — draw without */ }
   }
+})();
 
+// Build the static chart config (scales / plugins / annotations). Shared by
+// the empty-init at boot and every later in-place update.
+function buildChartConfig() {
   var line = getComputedStyle(document.documentElement).getPropertyValue('--state').trim() || '#2f8f5b';
   var ink = getComputedStyle(document.documentElement).getPropertyValue('--ink-soft').trim() || '#5a6660';
   var grid = getComputedStyle(document.documentElement).getPropertyValue('--line').trim() || '#e2ddd1';
 
-  var ctx = $('chart').getContext('2d');
-
-  // Register the annotation plugin (UMD global) once.
-  if (window.ChartAnnotation && !drawChart._annReg) {
-    Chart.register(window.ChartAnnotation);
-    drawChart._annReg = true;
-  }
-
-  if (chart) { chart.destroy(); }
-  chart = new Chart(ctx, {
+  return {
     type: 'line',
     data: {
-      labels: labels,
+      labels: [],
       datasets: [{
-        data: data,
+        data: [],
         borderColor: line,
         backgroundColor: line + '22',
         borderWidth: 2,
@@ -266,17 +264,64 @@ function drawChart(pts) {
         }
       }
     }
-  });
+  };
+}
+
+// Build the chart instance once, with empty data, so axes + annotation lines
+// paint immediately on load — before any USGS data arrives.
+function initChart() {
+  if (typeof Chart === 'undefined') return; // defer ordering should prevent this; stay safe
+  var el = $('chart');
+  if (!el) return;
+  if (chart) return;
+  chart = new Chart(el.getContext('2d'), buildChartConfig());
+}
+
+// Loading indicator (reuses #chart-note). Loading and error use distinct text.
+function showChartLoading() {
+  var n = $('chart-note');
+  if (!n) return;
+  n.textContent = 'Loading…';
+  n.hidden = false;
+}
+function hideChartNote() {
+  var n = $('chart-note');
+  if (n) n.hidden = true;
+}
+function showChartError() {
+  var n = $('chart-note');
+  if (!n) return;
+  n.textContent = 'Chart data unavailable, retrying…';
+  n.hidden = false;
+}
+
+// Update the existing chart's data + x-axis unit in place. No destroy/recreate.
+function applyChartData(pts) {
+  if (!chart) initChart();
+  if (!chart) return; // Chart lib genuinely unavailable
+  var labels = [], data = [];
+  for (var i = 0; i < pts.length; i++) {
+    labels.push(new Date(pts[i].t));
+    data.push(Number(gageToDepth(pts[i].gage).toFixed(2)));
+  }
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = data;
+  chart.options.scales.x.time.unit = (currentPeriod === 'P1D') ? 'hour' : 'day';
+  chart.update();
 }
 
 function refreshChart(period) {
   currentPeriod = period;
+  // Update the x-axis unit on the existing chart immediately on a range change.
+  if (chart) chart.options.scales.x.time.unit = (period === 'P1D') ? 'hour' : 'day';
+  if (firstChartLoad) showChartLoading();
   return fetchRiver(period).then(function (pts) {
     if (!pts.length) throw new Error('no chart points');
-    $('chart-note').hidden = true;
-    drawChart(pts);
+    hideChartNote();
+    applyChartData(pts);
+    firstChartLoad = false;
   }).catch(function (e) {
-    $('chart-note').hidden = false;
+    showChartError();
   });
 }
 
@@ -329,6 +374,9 @@ function wireControls() {
 function boot() {
   renderLadder();
   wireControls();
+  // Build the empty chart first so axes + annotation lines paint instantly.
+  // Wrapped so a chart failure can't kill current-reading / alerts rendering.
+  try { initChart(); } catch (e) { /* keep booting */ }
   refreshCurrent();
   refreshChart('P7D');
   refreshAlerts();
