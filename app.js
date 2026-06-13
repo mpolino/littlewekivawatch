@@ -116,10 +116,9 @@ function renderLadder() {
   }
 }
 
-// ---- USGS fetch ----
+// ---- USGS fetch (same-origin proxy: /api/river) ----
 function usgsUrl(period) {
-  return 'https://nwis.waterservices.usgs.gov/nwis/iv/?sites=' + SITE +
-    '&parameterCd=00065&format=json&period=' + period;
+  return '/api/river?period=' + period;
 }
 
 function parseUsgs(json) {
@@ -380,10 +379,7 @@ function periodWord(period) {
 
 // ---- Storm alerts (NWS) ----
 function refreshAlerts() {
-  return fetch('https://api.weather.gov/alerts/active?point=' + POINT, {
-    cache: 'no-store',
-    headers: { 'Accept': 'application/geo+json' }
-  })
+  return fetch('/api/alerts', { cache: 'no-store' })
     .then(function (r) {
       if (!r.ok) throw new Error('nws ' + r.status);
       return r.json();
