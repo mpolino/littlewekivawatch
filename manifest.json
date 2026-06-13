@@ -1,0 +1,19 @@
+{
+  "name": "Little Wekiva Watch",
+  "short_name": "Wekiva Watch",
+  "description": "Live Little Wekiva River depth at 677 Little Wekiva Rd, Altamonte Springs FL, with storm alerts.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f1ea",
+  "theme_color": "#0f3d2e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
