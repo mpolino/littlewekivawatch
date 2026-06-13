@@ -4,7 +4,7 @@
 // ---- Constants (verified facts; do not re-derive) ----
 var SITE = '02234990';
 var POINT = '28.6716,-81.4131';
-var BANK_HEIGHT = 10.3;          // ft, local depth at bank overtop
+var BANK_HEIGHT = 10;            // ft, local depth at bank overtop (my property)
 var GAGE_BASE = 23.41;           // gage height at ~0.5 ft local depth
 var DEPTH_AT_BASE = 0.5;
 var SLOPE = 1.146;               // local_depth = 0.5 + 1.146*(gage - 23.41)
@@ -23,7 +23,7 @@ var LADDER = [
   { minDepth: 7.7,  gage: 29.7, state: 'Elevated',     color: '#e08a1e', note: 'Irma level' },
   { minDepth: 8.1,  gage: 30.0, state: 'Prep',         color: '#df6b14' },
   { minDepth: 9.3,  gage: 31.1, state: 'Record',       color: '#c8470f', note: 'Ian level' },
-  { minDepth: 10.3, gage: 32.5, state: 'Bank overtop', color: '#b21f1f' }
+  { minDepth: 10.0, gage: 32.5, state: 'Bank overtop', color: '#b21f1f' }
 ];
 
 // ---- Conversion ----
@@ -168,6 +168,12 @@ function drawChart(pts) {
 
   var ctx = $('chart').getContext('2d');
 
+  // Register the annotation plugin (UMD global) once.
+  if (window.ChartAnnotation && !drawChart._annReg) {
+    Chart.register(window.ChartAnnotation);
+    drawChart._annReg = true;
+  }
+
   if (chart) { chart.destroy(); }
   chart = new Chart(ctx, {
     type: 'line',
@@ -201,6 +207,8 @@ function drawChart(pts) {
           border: { display: false }
         },
         y: {
+          min: 0,
+          max: 12,
           title: { display: true, text: 'ft above bottom', color: ink, font: { size: 11 } },
           grid: { color: grid, drawTicks: false },
           ticks: { color: ink, font: { size: 11 } },
@@ -212,6 +220,48 @@ function drawChart(pts) {
         tooltip: {
           callbacks: {
             label: function (c) { return c.parsed.y.toFixed(1) + ' ft above bottom'; }
+          }
+        },
+        annotation: {
+          clip: false,
+          annotations: {
+            bankTop: {
+              type: 'line',
+              yMin: 10,
+              yMax: 10,
+              borderColor: '#b21f1f',
+              borderWidth: 2,
+              label: {
+                display: true,
+                content: 'Bank top — my property',
+                position: 'start',
+                yAdjust: -9,
+                backgroundColor: 'rgba(178,31,31,.92)',
+                color: '#fff',
+                font: { size: 10, weight: '700' },
+                padding: { top: 2, bottom: 2, left: 5, right: 5 },
+                borderRadius: 4
+              }
+            },
+            ian: {
+              type: 'line',
+              yMin: 9.3,
+              yMax: 9.3,
+              borderColor: '#e08a1e',
+              borderWidth: 2,
+              borderDash: [5, 4],
+              label: {
+                display: true,
+                content: '50-yr high — Hurricane Ian 2022',
+                position: 'end',
+                yAdjust: 9,
+                backgroundColor: 'rgba(224,138,30,.92)',
+                color: '#fff',
+                font: { size: 10, weight: '700' },
+                padding: { top: 2, bottom: 2, left: 5, right: 5 },
+                borderRadius: 4
+              }
+            }
           }
         }
       }

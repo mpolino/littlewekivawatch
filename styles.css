@@ -52,6 +52,17 @@ html, body {
 .head h1 { font-size: 1.35rem; margin: 0; font-weight: 800; letter-spacing: -.01em; }
 .addr { margin: 4px 0 0; color: var(--ink-soft); font-size: .82rem; line-height: 1.4; }
 
+/* ---- Context note ---- */
+.context-note {
+  margin: 10px 4px 0;
+  padding: 9px 11px;
+  background: color-mix(in srgb, var(--ink-soft) 8%, transparent);
+  border-radius: 8px;
+  color: var(--ink-soft);
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
 /* ---- Hero ---- */
 .hero {
   background: var(--card);

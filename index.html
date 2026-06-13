@@ -20,6 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -35,6 +36,11 @@
       <h1>Little Wekiva Watch</h1>
       <p class="addr">677 Little Wekiva Rd, Altamonte Springs FL 32714 &middot; Spring Oaks</p>
     </header>
+
+    <p class="context-note">
+      This page tracks the Little Wekiva River specifically at 677 Little Wekiva Rd.
+      My bank is 10 ft above the riverbed.
+    </p>
 
     <section class="hero" id="hero" aria-live="polite">
       <div class="state-chip" id="state-chip">
@@ -62,7 +68,7 @@
       <div class="chart-controls" role="group" aria-label="Chart time range">
         <button type="button" class="rng" data-period="P1D">24h</button>
         <button type="button" class="rng active" data-period="P7D">7d</button>
-        <button type="button" class="rng" data-period="P30D">30d</button>
+        <button type="button" class="rng" data-period="P90D">90d</button>
       </div>
       <div class="chart-box">
         <canvas id="chart" aria-label="River depth trend chart"></canvas>
