@@ -38,9 +38,10 @@ local_depth_ft = 0.5 + 1.146 * (gage_height - 23.41)
 Show current state + "X.X ft below bank top."
 
 ## Data sources (all free, no key, client-side CORS-OK)
-1. **River level:** `https://nwis.waterservices.usgs.gov/nwis/iv/?sites=02234990&parameterCd=00065&format=json`
-   - Use the `nwis.` host directly — the bare `waterservices.usgs.gov` host 301-redirects.
-   - Append `&period=P1D` / `P7D` / `P30D` for the chart ranges.
+1. **River level:** USGS Water Data OGC API (switched 2026-11-18; the legacy `nwis.waterservices.usgs.gov` feed slowed to 12-25 s per call):
+   `https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items?monitoring_location_id=USGS-02234990&parameter_code=00065&time=P7D&sortby=time&properties=time,value&skipGeometry=true&limit=10000&f=json`
+   - `time=P1D` / `P7D` / `P90D` for the chart ranges (P90D ≈ 8,600 points, fits in one page at limit=10000).
+   - `functions/api/river.js` reshapes it into the legacy NWIS JSON shape (`value.timeSeries[0].values[0].value[]`) so `app.js` is unchanged, and caches each period at the Cloudflare edge for 5 min.
 2. **Storm alerts:** `https://api.weather.gov/alerts/active?point=28.6716,-81.4131`
    - Red banner triggers if any active alert `event` is in {Hurricane Warning, Hurricane Watch, Tropical Storm Warning, Tropical Storm Watch}.
    - Show alert headline + expiry. Hidden when none active.
